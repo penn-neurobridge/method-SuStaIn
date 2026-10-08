@@ -1,0 +1,33 @@
+# No control group: every biomarker gets a 2-component mixture model fitted
+# without labels (experimental), and SuStaIn runs on P(abnormal) instead of
+# z-scores. You must say which way each biomarker goes.
+
+data:
+  id_column: subject_id
+  group_column: null             # no groups in this file
+  biomarker_columns: auto
+  covariate_columns: []
+  missing: error
+
+preprocess:
+  direction: increasing          # all demo biomarkers go up with disease; or a per-biomarker mapping
+
+model:
+  type: mixture_unsupervised
+
+fit:
+  n_startpoints: 3
+  n_subtypes_max: 3
+  n_mcmc: 5000
+  seed: 1
+  parallel: false
+  n_posterior_samples: 1000
+
+cv:
+  enabled: true
+  n_folds: 2
+  seed: 0
+
+output:
+  dataset_name: nocontrols
+  plots: true

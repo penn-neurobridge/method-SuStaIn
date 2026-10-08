@@ -1,0 +1,43 @@
+[project]
+name = "sustain-pipeline"
+version = "0.1.0"
+description = "CSV in -> SuStaIn (Subtype and Stage Inference) -> subtypes, stages and event orderings out."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "numpy>=1.18,<2.4",
+    "pandas",
+    "scipy",
+    "scikit-learn",
+    "matplotlib>=3",
+    "pyyaml",
+    "dill>=0.3.8",
+    "pathos",
+    "tqdm",
+    # pySuStaIn and its two git-only dependencies, pinned to commits (upstream has no releases).
+    "awkde @ git+https://github.com/noxtoby/awkde.git@1c31e55fe54c0cad80ab423a9605fc9ddfb2614c",
+    "kde_ebm @ git+https://github.com/ucl-pond/kde_ebm.git@3ad8b648a4a2d0a8df0707f382b54c4ebef0805c",
+    "pySuStaIn @ git+https://github.com/ucl-pond/pySuStaIn.git@708fa22d89c9692dbeafcc2c31a1c8460ced5640",
+]
+
+[project.scripts]
+sustain = "sustain_pipeline.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sustain_pipeline"]
+
+[tool.pytest.ini_options]
+addopts = "-m 'not slow'"
+markers = ["slow: end-to-end runs that call pySuStaIn (run with: pytest -m slow)"]
+testpaths = ["tests"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
