@@ -1,0 +1,48 @@
+{
+  "command": "codes/run_analysis.py --input input/synthetic_data.csv --output output/",
+  "input": "/Users/akshajsatyawada/Desktop/NeuroBridge/method-SuStaIn/input/synthetic_data.csv",
+  "started": "2026-10-08T20:25:30.501991+00:00",
+  "finished": "2026-10-08T20:27:41.182727+00:00",
+  "duration_s": {
+    "preprocess": 0.0,
+    "fit": 51.2,
+    "cv": 79.0,
+    "report": 0.5
+  },
+  "versions": {
+    "python": "3.11.15",
+    "sustain_pipeline": "0.1.0",
+    "numpy": "2.3.5",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "pySuStaIn": "0.1",
+    "kde_ebm": "0.0.3",
+    "pySuStaIn_commit": "708fa22d89c9692dbeafcc2c31a1c8460ced5640"
+  },
+  "fingerprint": "68e51223550f85e1",
+  "cache": "fresh",
+  "n_subjects": 400,
+  "n_controls": 80,
+  "n_cases": 320,
+  "n_dropped_rows": 0,
+  "model_type": "zscore",
+  "n_events": 12,
+  "n_subtypes_max": 3,
+  "chosen_n_subtypes": 2,
+  "selection": "cvic",
+  "cvic": [
+    6448.693073266807,
+    5842.205429487657,
+    5848.431266250934
+  ],
+  "subtype_fractions": [
+    0.5645019687898031,
+    0.4354980312101969
+  ],
+  "subtype_counts": [
+    186,
+    139
+  ],
+  "n_unassigned": 0,
+  "warnings": []
+}

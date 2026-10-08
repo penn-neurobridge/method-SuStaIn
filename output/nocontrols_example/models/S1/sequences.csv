@@ -1,0 +1,6 @@
+subtype,fraction,n_subjects,position,event,biomarker,z_threshold,mean_position,sd_position
+1,1.0,227,1,M5,M5,,1.0,0.0
+1,1.0,227,2,M1,M1,,2.0,0.0
+1,1.0,227,3,M2,M2,,3.0,0.0
+1,1.0,227,4,M4,M4,,4.0,0.0
+1,1.0,227,5,M3,M3,,5.0,0.0

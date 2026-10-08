@@ -1,0 +1,37 @@
+data:
+  id_column: subject_id
+  group_column: group
+  control_label: control
+  biomarker_columns: auto
+  covariate_columns:
+  - age
+  missing: error
+preprocess:
+  direction: auto
+  clip_z: 10.0
+model:
+  type: auto
+  thresholds:
+    mode: fixed
+    z_vals:
+    - 1.0
+    - 2.0
+    - 3.0
+    z_max: 5.0
+    n_levels: 3
+    min_fraction_above_top: 0.05
+    strict: false
+fit:
+  n_startpoints: 3
+  n_subtypes_max: 3
+  n_mcmc: 5000
+  seed: 1
+  parallel: false
+  n_posterior_samples: 1000
+cv:
+  enabled: true
+  n_folds: 2
+  seed: 0
+output:
+  dataset_name: demo
+  plots: true

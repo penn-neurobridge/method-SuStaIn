@@ -1,0 +1,64 @@
+{
+  "model_type": "mixture_unsupervised",
+  "biomarkers": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5"
+  ],
+  "covariates": [],
+  "mixture": {
+    "kind": "mixture_unsupervised",
+    "per_biomarker": [
+      {
+        "biomarker": "M1",
+        "direction": "increasing",
+        "normal_mean": 0.025807005151432968,
+        "abnormal_mean": 1.512774650624271,
+        "abnormal_component": 1,
+        "abnormal_weight": 0.6500946166907643
+      },
+      {
+        "biomarker": "M2",
+        "direction": "increasing",
+        "normal_mean": -0.02018408947703665,
+        "abnormal_mean": 1.453676034158086,
+        "abnormal_component": 1,
+        "abnormal_weight": 0.45042317483043065
+      },
+      {
+        "biomarker": "M3",
+        "direction": "increasing",
+        "normal_mean": 0.03078837695774787,
+        "abnormal_mean": 1.4859695946522646,
+        "abnormal_component": 1,
+        "abnormal_weight": 0.21088893899307815
+      },
+      {
+        "biomarker": "M4",
+        "direction": "increasing",
+        "normal_mean": 0.017284858670349283,
+        "abnormal_mean": 1.502223879417991,
+        "abnormal_component": 0,
+        "abnormal_weight": 0.48300197155696767
+      },
+      {
+        "biomarker": "M5",
+        "direction": "increasing",
+        "normal_mean": -0.00014463927283443322,
+        "abnormal_mean": 1.494883484090984,
+        "abnormal_component": 1,
+        "abnormal_weight": 0.5581286128107908
+      }
+    ]
+  },
+  "events": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5"
+  ],
+  "n_events": 5
+}
