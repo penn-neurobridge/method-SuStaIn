@@ -16,16 +16,16 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-from . import __version__
-from .config import Config, ConfigError, effective_model_type, group_masks, resolve_columns
-from .fit import cross_validate, fingerprint, fit_all, prepare_cache
-from .io import RunPaths, apply_missing_policy, read_table
-from .models import build_model
-from .preprocess import ZscorePreprocessor
-from .report import subjects_table, write_config_yaml, write_json, write_model_outputs
-from .results import SubtypeModel
-from .select import choose_n_subtypes, model_selection_table
-from .thresholds import make_thresholds
+from config import __version__
+from config import Config, ConfigError, effective_model_type, group_masks, resolve_columns
+from fitting import cross_validate, fingerprint, fit_all, prepare_cache
+from data_io import RunPaths, apply_missing_policy, read_table
+from models import build_model
+from preprocessing import ZscorePreprocessor
+from reporting import subjects_table, write_config_yaml, write_json, write_model_outputs
+from results import SubtypeModel
+from model_selection import choose_n_subtypes, model_selection_table
+from thresholds import make_thresholds
 
 Logger = Callable[[str], None]
 
@@ -105,7 +105,7 @@ def run_pipeline(
         log(f"z-scored against controls; sign-flipped (decreasing) biomarkers: {flips or 'none'}; "
             f"{thr.n_events} events from thresholds {thr.to_dict(cols.biomarkers)['z_vals']}")
     else:
-        from .features_mixture import MixtureFeatures
+        from features_mixture import MixtureFeatures
 
         feats = MixtureFeatures(cols.biomarkers, model_type, cfg.preprocess.direction)
         feats.fit(df, is_control, is_case)
@@ -162,17 +162,17 @@ def run_pipeline(
     for m in models:
         write_model_outputs(m, spec.events, ids, groups, paths.model_dir(m.n_subtypes), title=f"{m.n_subtypes}-subtype model")
     chosen_dir = paths.model_dir(chosen)
-    for name in ("subjects.csv", "sequences.csv", "sequences.md"):
+    for name in ("results.csv", "sequences.csv", "sequences.md"):
         shutil.copyfile(chosen_dir / name, paths.out / name)
     if cfg.output.plots:
-        from . import plots
+        import plotting as plots
 
-        plots.biomarker_distributions(shown, is_control, spec, paths.plots / "biomarkers_after_preprocess.png")
+        plots.biomarker_distributions(shown, is_control, spec, paths.figures / "biomarkers_after_preprocess.png")
         for m in models:
-            plots.positional_variance(type(model), m, spec, len(df), paths.plots / f"pvd_S{m.n_subtypes}.png")
+            plots.positional_variance(type(model), m, spec, len(df), paths.figures / f"pvd_S{m.n_subtypes}.png")
         if CVIC is not None:
-            plots.cvic_plot(CVIC, loglike, chosen, paths.plots / "cvic.png")
-        plots.mcmc_trace(models, paths.plots / "mcmc_trace.png")
+            plots.cvic_plot(CVIC, loglike, chosen, paths.figures / "cvic.png")
+        plots.mcmc_trace(models, paths.figures / "mcmc_trace.png")
     timings["report"] = time.perf_counter() - t
 
     chosen_model = models[chosen - 1]
@@ -204,7 +204,7 @@ def run_pipeline(
         "n_unassigned": n_unassigned,
         "warnings": warnings,
     })
-    log(f"wrote {paths.out}  (subjects.csv, sequences.md, model_selection.csv, plots/)")
+    log(f"wrote {paths.out}  (results.csv, sequences.md, model_selection.csv, figures/)")
     return RunSummary(paths.out, model_type, len(df), spec.n_events, chosen, selection, cache, models, warnings, timings)
 
 
@@ -212,7 +212,7 @@ def _versions() -> dict:
     import importlib.metadata as md
     import json
 
-    out = {"python": platform.python_version(), "sustain_pipeline": __version__}
+    out = {"python": platform.python_version(), "method_sustain": __version__}
     for pkg in ("numpy", "pandas", "scikit-learn", "pySuStaIn", "kde_ebm"):
         try:
             out[pkg] = md.version(pkg)

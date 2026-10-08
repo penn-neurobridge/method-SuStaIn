@@ -1,4 +1,4 @@
-"""Writing the human-facing outputs: subjects.csv, sequences.csv/.md, JSON sidecars."""
+"""Writing the human-facing outputs: results.csv, sequences.csv/.md, JSON sidecars."""
 from __future__ import annotations
 
 import json
@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from .results import SubtypeModel
-from .sequences import Event, sequence_table, sequences_markdown
+from results import SubtypeModel
+from sequences import Event, sequence_table, sequences_markdown
 
 
 def subjects_table(model: SubtypeModel, ids: pd.Series, groups: pd.Series | None) -> pd.DataFrame:
@@ -34,7 +34,7 @@ def subjects_table(model: SubtypeModel, ids: pd.Series, groups: pd.Series | None
 def write_model_outputs(model: SubtypeModel, events: list[Event], ids: pd.Series, groups: pd.Series | None, out_dir: Path, title: str) -> None:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    subjects_table(model, ids, groups).to_csv(out_dir / "subjects.csv", index=False)
+    subjects_table(model, ids, groups).to_csv(out_dir / "results.csv", index=False)
     sequence_table(model, events).to_csv(out_dir / "sequences.csv", index=False)
     (out_dir / "sequences.md").write_text(sequences_markdown(model, events, title))
     np.savez_compressed(

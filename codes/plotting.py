@@ -9,8 +9,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-from .models import ModelSpec  # noqa: E402
-from .results import SubtypeModel  # noqa: E402
+from models import ModelSpec  # noqa: E402
+from results import SubtypeModel  # noqa: E402
 
 
 def biomarker_distributions(values: np.ndarray, is_control: np.ndarray, spec: ModelSpec, path: Path) -> None:

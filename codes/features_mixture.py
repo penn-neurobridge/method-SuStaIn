@@ -18,7 +18,7 @@ import dill
 import numpy as np
 import pandas as pd
 
-from .config import ConfigError
+from config import ConfigError
 
 
 class MixtureFeatures:

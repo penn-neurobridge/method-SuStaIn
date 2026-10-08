@@ -6,8 +6,8 @@ from pathlib import Path
 
 import numpy as np
 
-from .config import FitConfig
-from .sequences import Event, events_for_mixture, events_for_zscore
+from config import FitConfig
+from sequences import Event, events_for_mixture, events_for_zscore
 
 
 @dataclass

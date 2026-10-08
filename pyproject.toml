@@ -21,23 +21,15 @@ dependencies = [
     "pySuStaIn @ git+https://github.com/ucl-pond/pySuStaIn.git@708fa22d89c9692dbeafcc2c31a1c8460ced5640",
 ]
 
-[project.scripts]
-sustain = "sustain_pipeline.cli:main"
-
 [dependency-groups]
 dev = ["pytest>=8"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["sustain_pipeline"]
+[tool.uv]
+package = false   # a scripts repo: `uv sync` installs the dependencies, nothing to build
 
 [tool.pytest.ini_options]
 addopts = "-m 'not slow'"
 markers = ["slow: end-to-end runs that call pySuStaIn (run with: pytest -m slow)"]
 testpaths = ["tests"]
-
-[tool.hatch.metadata]
-allow-direct-references = true
+filterwarnings = ["ignore::RuntimeWarning:pySuStaIn"]  # pySuStaIn divides by zero on purpose
+pythonpath = ["codes"]

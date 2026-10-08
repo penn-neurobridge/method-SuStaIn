@@ -18,6 +18,9 @@ THRESHOLD_MODES = ("fixed", "auto")
 MAX_Z_LEVELS = 6  # pySuStaIn's positional-variance plot has 6 colours
 
 
+__version__ = "0.1.0"
+
+
 class ConfigError(ValueError):
     """Raised for anything wrong in the YAML or in how it matches the CSV."""
 

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from .results import SubtypeModel
+from results import SubtypeModel
 
 
 @dataclass

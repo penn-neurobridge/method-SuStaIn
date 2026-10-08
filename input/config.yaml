@@ -1,4 +1,4 @@
-# Quick profile for the simulated demo (~3-5 min on a laptop).
+# Default config for input/synthetic_data.csv (quick profile, ~2-3 min on a laptop).
 # For a real analysis copy this file, edit the `data:` block, and raise the
 # fit/cv settings towards those in config_full.yaml.
 

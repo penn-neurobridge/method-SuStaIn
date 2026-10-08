@@ -15,9 +15,9 @@ from pathlib import Path
 import numpy as np
 from sklearn.model_selection import KFold, StratifiedKFold
 
-from .config import CVConfig, FitConfig
-from .io import RunPaths
-from .results import SubtypeModel, load_subtype_model
+from config import CVConfig, FitConfig
+from data_io import RunPaths
+from results import SubtypeModel, load_subtype_model
 
 
 class CacheMismatch(RuntimeError):

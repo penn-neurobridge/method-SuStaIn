@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Regenerate the demo CSVs (deterministic), or check a results folder against the truth.
+"""Regenerate the synthetic CSVs in input/ (deterministic), or score a results folder against the truth.
 
-    python demo/make_demo_data.py                 # writes demo/demo_*.csv
-    python demo/make_demo_data.py --check results/demo [--truth demo/demo_zscore_truth.csv]
+    uv run python codes/make_synthetic_data.py
+    uv run python codes/make_synthetic_data.py --check output/ [--truth input/synthetic_data_truth.csv]
 """
 from __future__ import annotations
 
@@ -13,31 +13,30 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from sustain_pipeline.simulate import match_subtype_labels, simulate_mixture_cohort, simulate_zscore_cohort  # noqa: E402
+from simulate import match_subtype_labels, simulate_mixture_cohort, simulate_zscore_cohort
 
-HERE = Path(__file__).resolve().parent
+INPUT = Path(__file__).resolve().parents[1] / "input"
 
 
 def write_demo() -> None:
     zc = simulate_zscore_cohort(seed=0)
-    zc.data.to_csv(HERE / "demo_zscore.csv", index=False)
-    zc.truth.to_csv(HERE / "demo_zscore_truth.csv", index=False)
+    zc.data.to_csv(INPUT / "synthetic_data.csv", index=False)
+    zc.truth.to_csv(INPUT / "synthetic_data_truth.csv", index=False)
     mc = simulate_mixture_cohort(seed=1)
-    mc.data.to_csv(HERE / "demo_nocontrols.csv", index=False)
-    mc.truth.to_csv(HERE / "demo_nocontrols_truth.csv", index=False)
-    for c, name in ((zc, "demo_zscore"), (mc, "demo_nocontrols")):
+    mc.data.to_csv(INPUT / "synthetic_nocontrols.csv", index=False)
+    mc.truth.to_csv(INPUT / "synthetic_nocontrols_truth.csv", index=False)
+    for c, name in ((zc, "synthetic_data"), (mc, "synthetic_nocontrols")):
         print(f"{name}: {len(c.data)} subjects, truth sequences:")
         for s in c.sequences:
             print("   ", " ".join(str(int(e)) for e in s))
 
 
 def check(results: Path, truth_path: Path) -> int:
-    subjects = pd.read_csv(results / "subjects.csv")
+    subjects = pd.read_csv(results / "results.csv")
     truth = pd.read_csv(truth_path)
     m = subjects.merge(truth, on="subject_id", how="inner")
     if len(m) != len(truth):
-        print(f"WARNING: {len(truth) - len(m)} truth rows not found in subjects.csv")
+        print(f"WARNING: {len(truth) - len(m)} truth rows not found in results.csv")
     sub_ok = m.subtype.notna() & (m.true_stage > 0) & (m.stage > 0)
     est = m.loc[sub_ok, "subtype"].astype(int).to_numpy() - 1
     tru = m.loc[sub_ok, "true_subtype"].astype(int).to_numpy() - 1
@@ -54,7 +53,7 @@ def check(results: Path, truth_path: Path) -> int:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", metavar="RESULTS_DIR", type=Path, help="compare a results folder to the truth")
-    ap.add_argument("--truth", type=Path, default=HERE / "demo_zscore_truth.csv")
+    ap.add_argument("--truth", type=Path, default=INPUT / "synthetic_data_truth.csv")
     args = ap.parse_args()
     if args.check:
         sys.exit(check(args.check, args.truth))

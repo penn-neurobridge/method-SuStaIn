@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .config import ConfigError
+from config import ConfigError
 
 
 def read_table(path: str | Path) -> pd.DataFrame:
@@ -63,7 +63,7 @@ class RunPaths:
     @property
     def model_selection(self) -> Path: return self.out / "model_selection.csv"
     @property
-    def subjects(self) -> Path: return self.out / "subjects.csv"
+    def subjects(self) -> Path: return self.out / "results.csv"
     @property
     def sequences_csv(self) -> Path: return self.out / "sequences.csv"
     @property
@@ -75,7 +75,7 @@ class RunPaths:
 
     # plots
     @property
-    def plots(self) -> Path: return self.out / "plots"
+    def figures(self) -> Path: return self.out / "figures"
 
     # pySuStaIn's own folder
     @property
@@ -91,4 +91,4 @@ class RunPaths:
         self.out.mkdir(parents=True, exist_ok=True)
         self.sustain.mkdir(parents=True, exist_ok=True)  # pySuStaIn's os.mkdir is non-recursive
         if plots:
-            self.plots.mkdir(parents=True, exist_ok=True)
+            self.figures.mkdir(parents=True, exist_ok=True)

@@ -7,6 +7,8 @@ __pycache__/
 .ipynb_checkpoints/
 .DS_Store
 
-# Pipeline outputs (regenerate with `sustain run`)
-results/
+# pySuStaIn's pickles are large and regenerate on `uv run python codes/run_analysis.py`
+output/*/sustain/
+output/sustain/
 *.pickle
+*.log

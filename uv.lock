@@ -1066,7 +1066,7 @@ wheels = [
 [[package]]
 name = "sustain-pipeline"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "awkde" },
     { name = "dill" },
