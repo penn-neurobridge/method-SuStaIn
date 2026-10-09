@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SuStaIn Explorer</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171b22; --panel2:#1e232c; --ink:#e9ecf2; --mut:#9aa4b5; --line:#2b313c;
+  --A:#2fc4b0; --B:#f59e4b; --acc:#7aa2ff; --good:#5fd38d; --warn:#f2c14e; --bad:#ef6b6b;
+  color-scheme:dark;--z1:#e5484d; --z2:#d6409f; --z3:#3e63dd; --cell:#222833;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f6f7fa; --panel:#ffffff; --panel2:#eef0f5; --ink:#1b1f29; --mut:#5a6577; --line:#d8dce6;
+  --A:#0f9d8a; --B:#d9730f; --acc:#3556c8; --good:#1f9d55; --warn:#a97800; --bad:#c93a3a; --cell:#e6e9f0;;color-scheme:light}}
+:root[data-theme="light"]{--bg:#f6f7fa; --panel:#ffffff; --panel2:#eef0f5; --ink:#1b1f29; --mut:#5a6577; --line:#d8dce6;
+  --A:#0f9d8a; --B:#d9730f; --acc:#3556c8; --good:#1f9d55; --warn:#a97800; --bad:#c93a3a; --cell:#e6e9f0;;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px 80px}
+header{padding:36px 0 8px;display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+h1{font-size:30px;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:21px;margin:0 0 6px}
+h3{font-size:15px;margin:0 0 6px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+p{margin:0 0 10px}
+.lede{color:var(--mut);max-width:70ch}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin:22px 0}
+.mut{color:var(--mut)}
+.small{font-size:13px}
+.row{display:flex;gap:22px;flex-wrap:wrap}
+.col{flex:1 1 320px;min-width:0}
+.ctrl{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;margin:10px 0 14px;padding:10px 14px;background:var(--panel2);border-radius:10px}
+.ctrl label{font-size:13px;color:var(--mut);display:flex;gap:8px;align-items:center}
+.ctrl b{color:var(--ink);font-variant-numeric:tabular-nums;min-width:2.8em;display:inline-block}
+input[type=range]{accent-color:var(--acc);width:150px}
+select,button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+button:hover,select:hover{border-color:var(--acc)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent}
+.seg button.on{background:var(--acc);color:#fff}
+canvas{display:block;max-width:100%;border-radius:8px;background:var(--panel2)}
+.dotA{color:var(--A)} .dotB{color:var(--B)}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;border:1px solid var(--line);margin-right:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.card{background:var(--panel2);border-radius:10px;padding:10px 12px}
+.card .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.card .k{font-size:12px;color:var(--mut)}
+.callout{border-left:3px solid var(--acc);background:var(--panel2);padding:10px 14px;border-radius:0 10px 10px 0;margin:12px 0}
+.callout.warn{border-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0 10px}
+.chip{font-size:11.5px;padding:2px 7px;border-radius:6px;background:var(--cell);color:var(--mut);border:1px solid transparent}
+.chip.done{color:#fff;font-weight:600}
+.chip.done.A{background:var(--A)} .chip.done.B{background:var(--B)}
+table{border-collapse:collapse;font-size:14px}
+td,th{padding:5px 10px;text-align:center;border:1px solid var(--line)}
+th{color:var(--mut);font-weight:600}
+.themebtn{white-space:nowrap}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin:6px 0}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+ol.say{padding-left:20px} ol.say li{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>SuStaIn, visually</h1>
+    <p class="lede">Journal-club companion for Taylor et al. (2024). Part 1 is a toy you can poke. Part 2 shows real output from the official <code>pySuStaIn</code> package on simulated data, where we <b>change one thing, the noise</b>, and watch what breaks.</p>
+  </div>
+  <button class="themebtn" id="theme">Light / dark</button>
+</header>
+
+<!-- ===================== PART 1 ===================== -->
+<section id="p1">
+  <h3>Part 1 · the idea</h3>
+  <h2>Every dot is one patient, scanned once</h2>
+  <p>Imagine 3 brain regions (temporal, insula, frontal) that each shrink as the disease advances, measured in z-scores (0 = healthy, 3 = very abnormal). The disease has <b>two possible routes</b>: <span class="dotA"><b>Subtype A</b></span> hits the temporal lobe first, <span class="dotB"><b>Subtype B</b></span> hits the frontal lobe first. Nobody follows one patient for 15 years, so all we get is a cloud of snapshots. SuStaIn's job is to see the two routes <i>inside the cloud</i>.</p>
+
+  <div class="ctrl">
+    <label>Noise (SD) <input type="range" id="noise" min="0.1" max="1.6" step="0.05" value="0.5"><b id="noiseV"></b></label>
+    <label>Patients <input type="range" id="npat" min="60" max="600" step="20" value="300"><b id="npatV"></b></label>
+    <label>X axis <select id="ax"></select></label>
+    <label>Y axis <select id="ay"></select></label>
+    <button id="regen">New random patients</button>
+  </div>
+  <div class="ctrl" style="margin-top:-6px">
+    <label>Colour dots by</label>
+    <div class="seg" id="colorMode">
+      <button data-m="none">Nothing (what the algorithm gets)</button>
+      <button data-m="true" class="on">True subtype</button>
+      <button data-m="guess">Model's guess</button>
+    </div>
+    <span id="acc" class="small mut"></span>
+  </div>
+
+  <div class="row">
+    <div class="col" style="flex:1.2 1 420px">
+      <canvas id="scat" width="560" height="440"></canvas>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--A)"></span>Subtype A route (temporal first)</span>
+        <span><span class="sw" style="background:var(--B)"></span>Subtype B route (frontal first)</span>
+        <span>Lines = the noise-free route, stage 0 → 7. <b>Click a dot</b> to inspect that patient →</span>
+      </div>
+    </div>
+    <div class="col" style="flex:1 1 360px">
+      <h3>Selected patient</h3>
+      <div id="pinfo" class="small"></div>
+      <canvas id="heat" width="400" height="150"></canvas>
+      <p class="small mut" style="margin-top:6px">Each cell = "how well does this patient match <i>subtype s at stage k</i>?" (normalised so everything sums to 100%). Hover a cell to see what that hypothesis predicts.</p>
+      <div id="hyp"></div>
+    </div>
+  </div>
+
+  <div class="callout"><b>Try this.</b> (1) Set colours to <i>Nothing</i> and lower the noise: you can <i>see</i> two arms. Raise the noise and they melt together. (2) Click a dot near the centre (early stage): the heat map has no clear winner, because early on <i>both</i> routes look like "everything normal". (3) Click a dot far along an arm: one row lights up. That is the whole algorithm in miniature, <b>stage = how far along, subtype = which arm</b>.</div>
+  <p class="small mut">What is simplified here: the real algorithm doesn't know the routes. It <i>learns</i> them from the cloud (alternating between "assign patients" and "update the routes", plus MCMC for uncertainty). In this toy I hand it the true routes so you can see only the scoring step. Part 2 is the real learning.</p>
+</section>
+
+<!-- ===================== PART 2 ===================== -->
+<section id="p2">
+  <h3>Part 2 · real pySuStaIn output</h3>
+  <h2>Same patients, more noise: what does SuStaIn recover?</h2>
+  <p>This is the official tutorial's simulated z-score dataset (5 biomarkers × 3 severity levels = 15 events, 2 true subtypes, 500 people of whom 100 are controls). I kept the random seed fixed, so <b>the ground-truth routes and every patient's true subtype/stage are identical at every noise level</b>. The only thing that changes is the measurement noise. <b>Noise 1.0 is exactly the tutorial's default.</b> "Noise 2.0" means the same biology with half the signal-to-noise ratio: the event levels sit at z = 0.5, 1, 1.5 instead of 1, 2, 3, so they hide inside the scatter of healthy people. (I tell the model the true levels, so it isn't confused by anything except noise.)</p>
+
+  <div class="ctrl">
+    <label>Noise (SD)</label>
+    <div class="seg" id="noiseSeg"></div>
+    <span class="small mut" id="runInfo"></span>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <h3>Positional variance diagrams (the paper's Fig. 1 style)</h3>
+  <p class="small mut">Rows = biomarkers, columns = <b>position in the sequence</b> (1 = first event). A coloured block means "this biomarker reaches this severity at this point of the route": <span class="sw" style="background:var(--z1)"></span>z=1 <span class="sw" style="background:var(--z2)"></span>z=2 <span class="sw" style="background:var(--z3)"></span>z=3. Solid = confident, faded = uncertain.</p>
+  <div class="grid2">
+    <div><h3 class="dotA">Subtype 1 · ground truth</h3><canvas id="pv_t0" width="470" height="200"></canvas></div>
+    <div><h3 class="dotA">Subtype 1 · SuStaIn found</h3><canvas id="pv_e0" width="470" height="200"></canvas></div>
+    <div><h3 class="dotB">Subtype 2 · ground truth</h3><canvas id="pv_t1" width="470" height="200"></canvas></div>
+    <div><h3 class="dotB">Subtype 2 · SuStaIn found</h3><canvas id="pv_e1" width="470" height="200"></canvas></div>
+  </div>
+
+  <div class="row" style="margin-top:18px">
+    <div class="col">
+      <h3>Does it get the stage right?</h3>
+      <canvas id="stg" width="440" height="330"></canvas>
+      <p class="small mut">Each dot = a patient with the disease. On the diagonal = SuStaIn's stage equals the true stage.</p>
+    </div>
+    <div class="col">
+      <h3>The data it was given (first two biomarkers)</h3>
+      <div class="ctrl" style="padding:6px 12px">
+        <label>X <select id="rx"></select></label><label>Y <select id="ry"></select></label>
+      </div>
+      <canvas id="rscat" width="440" height="330"></canvas>
+      <p class="small mut">Colours are the <i>true</i> subtypes, which SuStaIn never sees.</p>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <div class="col">
+      <h3>Subtype accuracy at each true stage</h3>
+      <div id="bands"></div>
+    </div>
+    <div class="col">
+      <h3>Confusion matrix (cases only)</h3>
+      <div id="conf"></div>
+      <p class="small mut">Rows = true subtype, columns = what SuStaIn said (labels already matched up, since cluster numbers are arbitrary).</p>
+    </div>
+  </div>
+
+  <div class="callout warn" id="takeaway"></div>
+</section>
+
+<!-- ===================== PART 3 ===================== -->
+<section>
+  <h3>Part 3 · for the 3-minute slot</h3>
+  <ol class="say">
+    <li><b>Snapshots, not a movie.</b> Each person is scanned once. SuStaIn lines the snapshots up into routes (<i>subtypes</i>) and positions along a route (<i>stages</i>).</li>
+    <li><b>It learns the order of events, not the timing.</b> Stage 10 means "10 abnormal-events have happened on this route", not "10 years in".</li>
+    <li><b>My experiment:</b> same patients, signal-to-noise from 2× better to 3× worse. Per-patient subtype accuracy slid steadily (96% → 71.5%) and stage error quadrupled (0.7 → 2.9 of 15), but the <i>order of events</i> stayed almost perfect up to noise 1.5 (Spearman ≥ 0.97) and was still 0.8–0.9 at noise 3. The population-level story is more robust than any single patient's label.</li>
+    <li><b>Where it fails:</b> subtype is least reliable for the earliest and latest stages, because early on both routes look "all normal" and at the end both look "all abnormal". The paper's S2/S3/S4 fuzziness may partly be this.</li>
+    <li><b>What I took away:</b> Researchers found four different patterns of brain shrinkage in a language-related dementia. Only one pattern clearly matched a diagnosis, and the others overlapped, so the current diagnosis labels don't tell the whole story.</li>
+    <li><b>Question for the lab:</b> What would you want to see in a follow-up study to know whether these four subtypes are real, and not just a product of the algorithm?</li>
+  </ol>
+</section>
+</div>
+
+<script>
+const SWEEP = /*__SWEEP__*/null;
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function setup(c){ const dpr=window.devicePixelRatio||1, w=c.width, h=c.height;
+  if(!c._s){ c._s=true; c._w=w; c._h=h; c.style.width='100%'; c.style.aspectRatio=w+'/'+h; c.width=w*dpr; c.height=h*dpr; }
+  const g=c.getContext('2d'); g.setTransform(c.width/c._w,0,0,c.height/c._h,0,0); g.clearRect(0,0,c._w,c._h); return [g,c._w,c._h]; }
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(r){let u=0,v=0;while(!u)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function mix(hex,a){return hex} // placeholder
+const lightMQ=matchMedia('(prefers-color-scheme: light)');
+$('theme').onclick=()=>{const r=document.documentElement;const cur=r.dataset.theme||(lightMQ.matches?'light':'dark');r.dataset.theme=cur==='light'?'dark':'light';redrawAll()};
+lightMQ.addEventListener&&lightMQ.addEventListener('change',()=>redrawAll());
+
+/* ================= PART 1: toy model ================= */
+const BM=['Temporal','Insula','Frontal'], ZL=[1,2], ZMAX=3, NEV=6, NK=NEV+2;   // stages 0..7
+const SEQS=[ [[0,1],[1,1],[0,2],[2,1],[1,2],[2,2]],   // A: temporal first
+             [[2,1],[1,1],[2,2],[0,1],[1,2],[0,2]] ]; // B: frontal first
+function meanAt(s,k,b){ // same piecewise-linear route as the tutorial's z-score model
+  const pts=[[0,0]]; SEQS[s].forEach(([bb,l],pos)=>{ if(bb===b) pts.push([pos+1,ZL[l-1]]); }); pts.push([NEV+1,ZMAX]);
+  for(let i=0;i<pts.length-1;i++){ const [x0,y0]=pts[i],[x1,y1]=pts[i+1]; if(k>=x0&&k<=x1) return y0+(y1-y0)*(k-x0)/(x1-x0); }
+  return ZMAX; }
+const MU=[0,1].map(s=>Array.from({length:NK},(_,k)=>BM.map((_,b)=>meanAt(s,k,b))));
+let pts=[], sel=-1, hover=null;
+const state={noise:.5,n:300,seed:7,mode:'true',ax:0,ay:2};
+function gen(){ const r=mulberry(state.seed); pts=[];
+  for(let i=0;i<state.n;i++){ const s=r()<.5?0:1, k=Math.floor(r()*NK); const mu=MU[s][k];
+    const x=mu.map(m=>m+state.noise*gauss(r)); pts.push({s,k,x}); }
+  pts.forEach(p=>{p.post=posterior(p.x,state.noise); let best=[0,0,-1]; p.ps=[0,0];
+    for(let s=0;s<2;s++)for(let k=0;k<NK;k++){p.ps[s]+=p.post[s][k]; if(p.post[s][k]>best[2])best=[s,k,p.post[s][k]];}
+    p.guess=best[0]; p.gk=best[1];});
+}
+function posterior(x,sig){ const L=[[],[]]; let mx=-1e9;
+  for(let s=0;s<2;s++)for(let k=0;k<NK;k++){ let ll=0; for(let b=0;b<3;b++) ll-=(x[b]-MU[s][k][b])**2/(2*sig*sig); L[s][k]=ll; mx=Math.max(mx,ll); }
+  let Z=0; for(let s=0;s<2;s++)for(let k=0;k<NK;k++){L[s][k]=Math.exp(L[s][k]-mx);Z+=L[s][k];}
+  for(let s=0;s<2;s++)for(let k=0;k<NK;k++)L[s][k]/=Z; return L; }
+const SC=()=>[css('--A'),css('--B')];
+function drawScatter(){
+  const c=$('scat'),[g,W,H]=setup(c), m={l:48,r:14,t:14,b:42}, lo=-1.6, hi=4.6, ax=state.ax, ay=state.ay;
+  const X=v=>m.l+(v-lo)/(hi-lo)*(W-m.l-m.r), Y=v=>H-m.b-(v-lo)/(hi-lo)*(H-m.t-m.b);
+  g.strokeStyle=css('--line'); g.lineWidth=1; g.fillStyle=css('--mut'); g.font='12px sans-serif';
+  for(let v=-1;v<=4;v++){ g.beginPath();g.moveTo(X(v),m.t);g.lineTo(X(v),H-m.b);g.moveTo(m.l,Y(v));g.lineTo(W-m.r,Y(v));g.stroke();
+    g.textAlign='center';g.fillText(v,X(v),H-m.b+15); g.textAlign='right';g.fillText(v,m.l-6,Y(v)+4);}
+  g.textAlign='center'; g.fillText(BM[ax]+' z-score  (more abnormal →)',(m.l+W-m.r)/2,H-8);
+  g.save(); g.translate(13,(m.t+H-m.b)/2); g.rotate(-Math.PI/2); g.fillText(BM[ay]+' z-score',0,0); g.restore();
+  // routes
+  const col=SC(); [0,1].forEach(s=>{ g.strokeStyle=col[s]; g.lineWidth=2.5; g.globalAlpha=.9; g.beginPath();
+    for(let k=0;k<NK;k++){const x=X(MU[s][k][ax]),y=Y(MU[s][k][ay]); k?g.lineTo(x,y):g.moveTo(x,y);} g.stroke();
+    for(let k=0;k<NK;k++){ g.fillStyle=col[s]; g.beginPath(); g.arc(X(MU[s][k][ax]),Y(MU[s][k][ay]),3.5,0,7); g.fill(); }
+    g.globalAlpha=1; });
+  { const kx=MU[0][NK-1]; g.fillStyle=css('--ink'); g.textAlign='right'; g.font='bold 12px sans-serif'; g.fillText('both routes end here (everything abnormal)',X(kx[ax])+6,Y(kx[ay])-10); g.font='12px sans-serif'; }
+  g.fillStyle=css('--mut'); g.textAlign='left'; g.fillText('stage 0',X(0)+6,Y(0)+16);
+  // dots
+  pts.forEach((p,i)=>{ let fill; if(state.mode==='none') fill=css('--mut'); else if(state.mode==='true') fill=col[p.s]; else fill=col[p.guess];
+    g.globalAlpha=.55; g.fillStyle=fill; g.beginPath(); g.arc(X(p.x[ax]),Y(p.x[ay]),3.6,0,7); g.fill();
+    if(state.mode==='guess' && p.guess!==p.s){ g.globalAlpha=.9; g.strokeStyle=css('--bad'); g.lineWidth=1.3; g.stroke(); } });
+  g.globalAlpha=1;
+  if(sel>=0){ const p=pts[sel]; g.strokeStyle=css('--ink'); g.lineWidth=2.5; g.beginPath(); g.arc(X(p.x[ax]),Y(p.x[ay]),9,0,7); g.stroke(); }
+  c._map={X,Y};
+  // accuracy
+  const ok=pts.filter(p=>p.guess===p.s), late=pts.filter(p=>p.k>=4), early=pts.filter(p=>p.k>=1&&p.k<4);
+  const a=l=>l.length?Math.round(100*l.filter(p=>p.guess===p.s).length/l.length)+'%':'–';
+  $('acc').innerHTML = state.mode==='guess' ? `Red-ringed dots = wrong. Model got <b>${a(pts)}</b> right overall (<b>${a(early)}</b> for early stages 1–3, <b>${a(late)}</b> for stage ≥ 4; chance = 50%).` : '';
+}
+function drawHeat(){
+  const c=$('heat'),[g,W,H]=setup(c); if(sel<0){g.fillStyle=css('--mut');g.font='14px sans-serif';g.fillText('Click a dot to score it.',14,28);return;}
+  const p=pts[sel], m={l:78,t:24,r:8,b:24}, cw=(W-m.l-m.r)/NK, ch=(H-m.t-m.b)/2, col=SC();
+  g.font='12px sans-serif'; g.textAlign='center'; g.fillStyle=css('--mut');
+  for(let k=0;k<NK;k++) g.fillText(k,m.l+cw*(k+.5),m.t-8);
+  g.fillText('stage →',m.l+cw*NK/2,H-6);
+  for(let s=0;s<2;s++){ g.textAlign='right'; g.fillStyle=col[s]; g.font='bold 12px sans-serif'; g.fillText('Subtype '+'AB'[s],m.l-8,m.t+ch*(s+.5)+4);
+    for(let k=0;k<NK;k++){ const v=p.post[s][k], x=m.l+cw*k, y=m.t+ch*s;
+      g.fillStyle=css('--cell'); g.fillRect(x+1,y+1,cw-2,ch-2); g.globalAlpha=Math.min(1,.12+v*1.6); g.fillStyle=col[s]; g.fillRect(x+1,y+1,cw-2,ch-2); g.globalAlpha=1;
+      if(v>=.04){ g.fillStyle='#fff'; g.font='11px sans-serif'; g.textAlign='center'; g.fillText(Math.round(v*100)+'%',x+cw/2,y+ch/2+4);}
+      if(p.s===s&&p.k===k){ g.strokeStyle=css('--ink'); g.lineWidth=2; g.setLineDash([4,3]); g.strokeRect(x+2,y+2,cw-4,ch-4); g.setLineDash([]); } } }
+  c._geo={m,cw,ch};
+  $('pinfo').innerHTML = `Measured z-scores: ${BM.map((n,b)=>`${n} <b>${p.x[b].toFixed(2)}</b>`).join(' · ')}<br>
+   Truth (hidden from the model): <b class="${'AB'[p.s]=='A'?'dotA':'dotB'}">Subtype ${'AB'[p.s]}</b>, stage ${p.k} <span class="mut">(dashed box)</span><br>
+   Model says: <b>P(A) = ${Math.round(p.ps[0]*100)}%</b>, P(B) = ${Math.round(p.ps[1]*100)}% → <b>${Math.max(p.ps[0],p.ps[1])>.8?'confident':'unsure'}</b>`;
+  showHyp(hover||{s:p.guess,k:p.gk});
+}
+function showHyp({s,k}){ if(sel<0)return; const p=pts[sel], col=SC();
+  const chips=SEQS[s].map(([b,l],pos)=>`<span class="chip ${pos<k?'done '+'AB'[s]:''}">${BM[b]} z=${l}</span>`).join('');
+  const rows=BM.map((n,b)=>{const mu=MU[s][k][b], o=p.x[b]; const pct=v=>Math.max(0,Math.min(100,(v+1)/5*100));
+    return `<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="width:62px" class="small mut">${n}</span>
+    <div style="position:relative;flex:1;height:10px;background:var(--cell);border-radius:5px">
+      <div style="position:absolute;left:${pct(mu)}%;top:-3px;width:3px;height:16px;background:${col[s]}"></div>
+      <div style="position:absolute;left:calc(${pct(o)}% - 5px);top:0;width:10px;height:10px;border-radius:50%;background:var(--ink)"></div></div></div>`}).join('');
+  $('hyp').innerHTML=`<h3 style="margin-top:10px">Hypothesis: Subtype ${'AB'[s]}, stage ${k}</h3>
+   <div class="small mut">Events already happened on this route (coloured):</div><div class="chips">${chips}</div>
+   <div class="small mut">● patient's measurement vs <span style="color:${col[s]}">▌</span> what this hypothesis expects. Close together = high score.</div>${rows}`;
+}
+function pick(ev){ const c=$('scat'),r=c.getBoundingClientRect(), sx=c._w/r.width, x=(ev.clientX-r.left)*sx, y=(ev.clientY-r.top)*sx, {X,Y}=c._map; let best=-1,bd=1e9;
+  pts.forEach((p,i)=>{const d=(X(p.x[state.ax])-x)**2+(Y(p.x[state.ay])-y)**2; if(d<bd){bd=d;best=i}}); if(bd<400){sel=best;hover=null;drawScatter();drawHeat();} }
+$('scat').addEventListener('click',pick);
+$('heat').addEventListener('mousemove',ev=>{ const c=$('heat'); if(!c._geo||sel<0)return; const r=c.getBoundingClientRect(), sx=c._w/r.width, {m,cw,ch}=c._geo;
+  const k=Math.floor(((ev.clientX-r.left)*sx-m.l)/cw), s=Math.floor(((ev.clientY-r.top)*sx-m.t)/ch);
+  if(k>=0&&k<NK&&s>=0&&s<2){hover={s,k};showHyp(hover);} });
+$('heat').addEventListener('mouseleave',()=>{hover=null;if(sel>=0)showHyp({s:pts[sel].guess,k:pts[sel].gk})});
+function redraw1(){drawScatter();drawHeat()}
+const nz=$('noise'), np_=$('npat');
+function readCtrl(){state.noise=+nz.value;state.n=+np_.value;$('noiseV').textContent=state.noise.toFixed(2);$('npatV').textContent=state.n;}
+nz.oninput=np_.oninput=()=>{readCtrl();gen();redraw1()};
+$('regen').onclick=()=>{state.seed=Math.floor(Math.random()*1e6);sel=-1;gen();redraw1()};
+BM.forEach((n,i)=>{['ax','ay','rx','ry'].forEach(id=>{const o=document.createElement('option');o.value=i;o.textContent=(id[0]=='r'?'Biomarker '+i:n);$(id).appendChild(o)})});
+$('ax').value=0;$('ay').value=2;
+$('ax').onchange=$('ay').onchange=()=>{state.ax=+$('ax').value;state.ay=+$('ay').value;redraw1()};
+document.querySelectorAll('#colorMode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#colorMode button').forEach(x=>x.classList.remove('on'));b.classList.add('on');state.mode=b.dataset.m;drawScatter()});
+
+/* ================= PART 2: real pySuStaIn sweep ================= */
+const NB=5, NL=3, NEVR=15;
+let cur=0, rx=0, ry=1;
+function pvDiagram(id,P,title){ // P[event][position]; event = level*NB + biomarker (pySuStaIn ordering)
+  const c=$(id),[g,W,H]=setup(c), m={l:36,t:22,r:6,b:6}, cw=(W-m.l-m.r)/NEVR, ch=(H-m.t-m.b)/NB, zc=[css('--z1'),css('--z2'),css('--z3')];
+  g.font='11px sans-serif'; g.fillStyle=css('--mut'); g.textAlign='center';
+  for(let p=0;p<NEVR;p++) if(p%2==0||p==NEVR-1) g.fillText(p+1,m.l+cw*(p+.5),m.t-8);
+  for(let b=0;b<NB;b++){ g.textAlign='right'; g.fillStyle=css('--mut'); g.fillText('B'+b,m.l-6,m.t+ch*(b+.5)+4);
+    for(let p=0;p<NEVR;p++){ const x=m.l+cw*p,y=m.t+ch*b; g.fillStyle=css('--cell'); g.fillRect(x+.5,y+.5,cw-1,ch-1);
+      for(let l=0;l<NL;l++){ const v=P[l*NB+b][p]; if(v>0.01){ g.globalAlpha=Math.min(1,v); g.fillStyle=zc[l]; g.fillRect(x+.5,y+.5,cw-1,ch-1); } } g.globalAlpha=1; } }
+}
+function truthP(seq){ const P=Array.from({length:NEVR},()=>Array(NEVR).fill(0)); seq.forEach((e,pos)=>P[e][pos]=1); return P; }
+function band(label,v,color){return `<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><span style="width:105px" class="small">${label}</span>
+  <div style="flex:1;height:16px;background:var(--cell);border-radius:5px;overflow:hidden"><div style="width:${v*100}%;height:100%;background:${color}"></div></div><b style="width:44px;text-align:right">${Math.round(v*100)}%</b></div>`}
+function drawReal(){
+  const R=SWEEP[cur], E=R.eval; const lv=[1,2,3].map(v=>+(v/R.noise).toFixed(2)).join(', '); $('runInfo').textContent=` event levels sit at z = ${lv} (tutorial: 1, 2, 3)`;
+  document.querySelectorAll('#noiseSeg button').forEach((b,i)=>b.classList.toggle('on',i===cur));
+  const f=(v,d=2)=>v.toFixed(d), rho=E.sequence_spearman;
+  $('cards').innerHTML=[
+   [Math.round(E.subtype_accuracy*100)+'%','patients given the right subtype (chance 50%)'],
+   [f(E.stage_mae,1),'average stage error (out of 15 stages)'],
+   [f(rho[0])+' / '+f(rho[1]),'event-order recovery, subtype 1 / 2 (Spearman, 1 = perfect)'],
+   [Math.round(E.mean_prob_subtype*100)+'%','how sure SuStaIn says it is, on average']].map(([v,k])=>`<div class="card"><div class="v">${v}</div><div class="k">${k}</div></div>`).join('');
+  [0,1].forEach(t=>{ pvDiagram('pv_t'+t,truthP(R.gt_sequence[t])); pvDiagram('pv_e'+t,R.P_est[t].map(row=>row)); });
+  // stage scatter
+  let c=$('stg'),[g,W,H]=setup(c); const m={l:40,r:10,t:10,b:36}, X=v=>m.l+v/15*(W-m.l-m.r), Y=v=>H-m.b-v/15*(H-m.t-m.b), r=mulberry(3), col=SC();
+  g.strokeStyle=css('--line'); g.fillStyle=css('--mut'); g.font='11px sans-serif';
+  for(let v=0;v<=15;v+=3){g.beginPath();g.moveTo(X(v),m.t);g.lineTo(X(v),H-m.b);g.moveTo(m.l,Y(v));g.lineTo(W-m.r,Y(v));g.stroke();g.textAlign='center';g.fillText(v,X(v),H-m.b+14);g.textAlign='right';g.fillText(v,m.l-5,Y(v)+4);}
+  g.textAlign='center';g.fillText('true stage',(m.l+W-m.r)/2,H-6); g.save();g.translate(12,H/2);g.rotate(-Math.PI/2);g.fillText('SuStaIn stage',0,0);g.restore();
+  g.strokeStyle=css('--ink');g.setLineDash([5,4]);g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(15),Y(15));g.stroke();g.setLineDash([]);
+  R.gt_stages.forEach((s,i)=>{ if(s===0)return; const gs=Math.min(s,15); g.globalAlpha=.5; g.fillStyle=col[R.gt_subtypes[i]];
+    g.beginPath(); g.arc(X(gs)+(r()-.5)*7,Y(R.ml_stage[i])+(r()-.5)*7,2.8,0,7); g.fill(); }); g.globalAlpha=1;
+  // data scatter
+  c=$('rscat'); [g]=setup(c); const W2=c._w,H2=c._h; const lo=-2,hi=Math.max(6,Math.max(...R.data.map(d=>Math.max(d[rx],d[ry])))+1);
+  const X2=v=>m.l+(v-lo)/(hi-lo)*(W2-m.l-m.r), Y2=v=>H2-m.b-(v-lo)/(hi-lo)*(H2-m.t-m.b);
+  g.strokeStyle=css('--line');g.fillStyle=css('--mut');g.font='11px sans-serif';
+  for(let v=Math.ceil(lo);v<=hi;v+=2){g.beginPath();g.moveTo(X2(v),m.t);g.lineTo(X2(v),H2-m.b);g.moveTo(m.l,Y2(v));g.lineTo(W2-m.r,Y2(v));g.stroke();g.textAlign='center';g.fillText(v,X2(v),H2-m.b+14);g.textAlign='right';g.fillText(v,m.l-5,Y2(v)+4);}
+  g.textAlign='center';g.fillText('Biomarker '+rx+' (z-score)',(m.l+W2-m.r)/2,H2-6);g.save();g.translate(12,H2/2);g.rotate(-Math.PI/2);g.fillText('Biomarker '+ry,0,0);g.restore();
+  R.data.forEach((d,i)=>{ g.globalAlpha=.5; g.fillStyle=R.gt_stages[i]===0?css('--mut'):col[R.gt_subtypes[i]]; g.beginPath(); g.arc(X2(d[rx]),Y2(d[ry]),2.6,0,7); g.fill(); }); g.globalAlpha=1;
+  // bands + confusion
+  const bars=E.subtype_accuracy_by_stage.map(d=>{const h=Math.round(d.acc*110), c=d.acc>.8?css('--good'):d.acc>.62?css('--warn'):css('--bad');
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0" title="true stage ${d.stage}: ${Math.round(d.acc*100)}% right (n=${d.n})">
+      <div class="small mut" style="font-size:10px">${Math.round(d.acc*100)}</div><div style="width:80%;height:${h}px;background:${c};border-radius:3px 3px 0 0"></div>
+      <div class="small" style="font-size:11px;margin-top:2px">${d.stage}</div></div>`}).join('');
+  $('bands').innerHTML=`<div style="display:flex;gap:3px;align-items:flex-end;height:150px;border-bottom:1px solid var(--line);position:relative">
+      <div style="position:absolute;left:0;right:0;bottom:${55+17}px;border-top:1px dashed var(--mut);opacity:.6"></div>${bars}</div>
+    <div class="small mut" style="text-align:center">true stage → &nbsp;(dashed line = 50% = coin flip; % shown above bars)</div>`;
+  const C=E.confusion; $('conf').innerHTML=`<table><tr><th></th><th>SuStaIn: 1</th><th>SuStaIn: 2</th></tr>`+
+    C.map((row,i)=>`<tr><th>True: ${i+1}</th>`+row.map((v,j)=>`<td style="background:${i===j?'rgba(95,211,141,.25)':'rgba(239,107,107,.2)'}"><b>${v}</b></td>`).join('')+'</tr>').join('')+'</table>';
+  const low=E.subtype_accuracy, last=SWEEP[SWEEP.length-1].eval, first=SWEEP[0].eval;
+  $('takeaway').innerHTML = cur===0 ? `<b>Low noise:</b> the two routes are clean, so subtype labels are right ${Math.round(E.subtype_accuracy*100)}% of the time. Now slide towards higher noise.`
+    : `<b>What changed vs noise ${SWEEP[0].noise}:</b> subtype accuracy ${Math.round(first.subtype_accuracy*100)}% → <b>${Math.round(E.subtype_accuracy*100)}%</b>, average stage error ${first.stage_mae.toFixed(1)} → <b>${E.stage_mae.toFixed(1)}</b>. Look at the "found" diagrams: blocks smear sideways (the order gets uncertain) before routes get swapped.`;
+}
+if(SWEEP){
+  SWEEP.forEach((r,i)=>{const b=document.createElement('button');b.textContent=r.noise.toFixed(1)+(r.noise===1?' (tutorial)':'');b.onclick=()=>{cur=i;drawReal()};$('noiseSeg').appendChild(b)});
+  $('rx').value=0;$('ry').value=1;$('rx').onchange=$('ry').onchange=()=>{rx=+$('rx').value;ry=+$('ry').value;drawReal()};
+  cur=SWEEP.findIndex(r=>r.noise===1); if(cur<0)cur=0;
+} else $('p2').innerHTML='<p>Sweep results not embedded.</p>';
+
+function redrawAll(){redraw1(); if(SWEEP)drawReal();}
+readCtrl(); gen(); sel=pts.findIndex(p=>p.k>=4&&p.s===0); redrawAll();
+addEventListener('resize',()=>{});
+</script>
+</body>
+</html>

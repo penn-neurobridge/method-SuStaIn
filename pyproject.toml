@@ -1,0 +1,36 @@
+[project]
+name = "sustain-binoy"
+version = "0.1.0"
+description = "SuStaIn journal club: how does measurement noise affect subtype and stage inference? (simulated z-score data)"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "numpy>=1.18,<2.4",   # numpy >= 2.4 breaks pySuStaIn's simulator
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "scikit-learn",
+    "pathos",
+    "dill>=0.3.8",
+    "pybind11",
+    "tqdm",
+    "typer>=0.12",
+    "pysustain",
+]
+
+[dependency-groups]
+dev = ["pytest", "jupyter", "nbconvert", "ipykernel"]
+
+[tool.uv]
+package = false
+# pySuStaIn lists two git-only dependencies that only the mixture/KDE models need. Dropping them keeps `uv sync`
+# working for the z-score model used here (uv's `exclude-dependencies` removes them from resolution).
+exclude-dependencies = ["awkde", "kde-ebm"]
+
+[tool.uv.sources]
+# pinned to the commit this was developed and tested against
+pysustain = { git = "https://github.com/ucl-pond/pySuStaIn.git", rev = "708fa22d89c9692dbeafcc2c31a1c8460ced5640" }
+
+[tool.pytest.ini_options]
+pythonpath = ["codes"]
+testpaths = ["tests"]
