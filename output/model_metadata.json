@@ -1,0 +1,16 @@
+{
+  "n_subjects": 200,
+  "n_biomarkers": 6,
+  "n_subtypes": 2,
+  "n_iterations_mcmc": 50000,
+  "n_startpoints": 10,
+  "seed": 42,
+  "biomarker_labels": [
+    "Hippocampus",
+    "Entorhinal Ctx",
+    "Amygdala",
+    "Fusiform Gyrus",
+    "Precuneus",
+    "Post. Cingulate"
+  ]
+}
