@@ -1,94 +1,177 @@
-"""Figures: biomarker distributions, positional variance diagrams, CVIC, MCMC trace."""
+"""
+plotting.py — All visualizations for the SuStaIn results.
+
+Three plots are produced:
+
+1. positional_variance_diagram.png
+   The signature SuStaIn output. Shows, for each subtype, the probability
+   that each biomarker occupies each position in the disease progression
+   sequence. Darker = more probable.
+
+2. staging_histogram.png
+   How many subjects are assigned to each disease stage (per subtype).
+   Gives a sense of the stage distribution in your sample.
+
+3. subtype_assignments.png
+   A simple bar chart showing how many subjects were assigned to each subtype.
+"""
+
 from __future__ import annotations
 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from pathlib import Path
 
-import matplotlib
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-
-from models import ModelSpec  # noqa: E402
-from results import SubtypeModel  # noqa: E402
+# ── Colour palette ──────────────────────────────────────────────────────────
+SUBTYPE_COLORS = ["#4C72B0", "#DD8452", "#55A868", "#C44E52"]  # blue, orange, green, red
 
 
-def biomarker_distributions(values: np.ndarray, is_control: np.ndarray, spec: ModelSpec, path: Path) -> None:
-    """Controls vs patients per biomarker after preprocessing, with threshold lines for z-score models."""
-    B = len(spec.biomarkers)
-    ncol = min(4, B)
-    nrow = int(np.ceil(B / ncol))
-    fig, axes = plt.subplots(nrow, ncol, figsize=(3.2 * ncol, 2.6 * nrow), squeeze=False)
-    has_controls = bool(is_control.any())
-    for i, ax in enumerate(axes.flat):
-        if i >= B:
-            ax.axis("off")
-            continue
-        v = values[:, i]
-        v = v[~np.isnan(v)] if not has_controls else v
-        bins = np.linspace(np.nanmin(values[:, i]), np.nanmax(values[:, i]), 30)
-        if has_controls:
-            ax.hist(values[is_control, i], bins=bins, alpha=0.6, label="controls", color="#4c72b0")
-            ax.hist(values[~is_control, i], bins=bins, alpha=0.6, label="patients", color="#dd8452")
-        else:
-            ax.hist(v, bins=bins, alpha=0.7, color="#dd8452", label="all subjects")
-        if spec.is_zscore:
-            for z in spec.Z_vals[i]:
-                if z > 0:
-                    ax.axvline(z, color="k", lw=0.8, ls="--")
-            ax.axvline(spec.Z_max[i], color="r", lw=0.8, ls=":")
-        ax.set_title(spec.biomarkers[i], fontsize=10)
-        ax.tick_params(labelsize=8)
-        if i == 0:
-            ax.legend(fontsize=7)
-    xlabel = "z-score (positive = abnormal)" if spec.is_zscore else "P(abnormal)"
-    fig.supxlabel(xlabel, fontsize=9)
-    fig.tight_layout()
-    fig.savefig(path, dpi=150)
-    plt.close(fig)
+def plot_positional_variance_diagram(
+    samples_sequence: np.ndarray,
+    biomarker_labels: list[str],
+    output_path: Path,
+    subtype_idx: int = 0,
+) -> None:
+    """
+    Draw the positional variance diagram for one subtype.
 
+    Parameters
+    ----------
+    samples_sequence : np.ndarray, shape (N_samples, N_biomarkers)
+        Each row is one MCMC sample of the ordering of biomarkers.
+        Values are biomarker indices (0-based).
+    biomarker_labels : list of str
+        Names for each biomarker.
+    output_path : Path
+        Where to save the PNG.
+    subtype_idx : int
+        Which subtype this is (used only for the plot title).
+    """
+    n_samples, n_biomarkers = samples_sequence.shape
 
-def positional_variance(sustain_cls, model: SubtypeModel, spec: ModelSpec, n_subjects: int, path: Path) -> None:
-    """pySuStaIn's positional variance diagram for one model; subtypes already in our index order."""
-    titles = [f"Subtype {s + 1}  (f = {model.fractions[s]:.2f}, n = {int(model.counts()[s])})" for s in range(model.n_subtypes)]
-    kwargs = dict(
-        biomarker_labels=list(spec.biomarkers),
-        subtype_order=list(range(model.n_subtypes)),
-        subtype_titles=titles,
-        save_path=None,
+    # Build the positional variance matrix:
+    # pvd[i, j] = fraction of MCMC samples where biomarker i is at position j
+    pvd = np.zeros((n_biomarkers, n_biomarkers))
+    for sample in samples_sequence:
+        for position, biomarker in enumerate(sample):
+            pvd[biomarker, position] += 1
+    pvd /= n_samples  # convert counts → probabilities
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    im = ax.imshow(pvd, aspect="auto", cmap="Blues", vmin=0, vmax=1)
+
+    # Axis labels
+    ax.set_xticks(range(n_biomarkers))
+    ax.set_xticklabels([f"Stage {i+1}" for i in range(n_biomarkers)], fontsize=9)
+    ax.set_yticks(range(n_biomarkers))
+    ax.set_yticklabels(biomarker_labels, fontsize=9)
+
+    ax.set_xlabel("Position in sequence →  (earlier = affected first)", fontsize=10)
+    ax.set_ylabel("Biomarker", fontsize=10)
+    ax.set_title(
+        f"Subtype {subtype_idx + 1} — Positional Variance Diagram\n"
+        "(colour = probability that biomarker occupies that position)",
+        fontsize=11,
     )
-    if spec.is_zscore:
-        figs, _ = sustain_cls.plot_positional_var(model.samples_sequence, model.samples_f, n_subjects, spec.Z_vals, **kwargs)
-    else:
-        figs, _ = sustain_cls.plot_positional_var(model.samples_sequence, model.samples_f, n_subjects, **kwargs)
-    figs[0].savefig(path, dpi=150, bbox_inches="tight")
-    for f in figs:
-        plt.close(f)
+
+    plt.colorbar(im, ax=ax, label="Probability")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+    print(f"[plotting] Saved: {output_path}")
 
 
-def cvic_plot(CVIC: np.ndarray, loglike: np.ndarray, chosen: int, path: Path) -> None:
-    S = np.arange(1, len(CVIC) + 1)
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.5, 3))
-    a1.plot(S, CVIC, "o-", color="#4c72b0")
-    a1.plot(chosen, CVIC[chosen - 1], "o", ms=12, mfc="none", mec="r", mew=2)
-    a1.set_xlabel("number of subtypes")
-    a1.set_ylabel("CVIC  (lower is better)")
-    a1.set_xticks(S)
-    a2.boxplot([loglike[:, s - 1] for s in S], positions=S)
-    a2.set_xlabel("number of subtypes")
-    a2.set_ylabel("test log-likelihood per fold")
-    fig.tight_layout()
-    fig.savefig(path, dpi=150)
-    plt.close(fig)
+def plot_staging_histogram(
+    subject_stages: np.ndarray,
+    subject_subtypes: np.ndarray,
+    n_biomarkers: int,
+    output_path: Path,
+) -> None:
+    """
+    Histogram of disease stage assignments, coloured by subtype.
+
+    Parameters
+    ----------
+    subject_stages : np.ndarray, shape (N_subjects,)
+        Most-likely stage for each subject (0 = no abnormality, n_biomarkers = all abnormal).
+    subject_subtypes : np.ndarray, shape (N_subjects,)
+        Most-likely subtype assignment for each subject (0-indexed).
+    n_biomarkers : int
+        Number of biomarkers = number of stages.
+    output_path : Path
+        Where to save the PNG.
+    """
+    n_subtypes = int(subject_subtypes.max()) + 1
+    bins = np.arange(0, n_biomarkers + 2) - 0.5  # bin edges
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    for s in range(n_subtypes):
+        mask = subject_subtypes == s
+        ax.hist(
+            subject_stages[mask],
+            bins=bins,
+            alpha=0.7,
+            label=f"Subtype {s + 1}",
+            color=SUBTYPE_COLORS[s % len(SUBTYPE_COLORS)],
+            edgecolor="white",
+            linewidth=0.5,
+        )
+
+    ax.set_xlabel("Disease stage  (0 = healthy-like, higher = more advanced)", fontsize=10)
+    ax.set_ylabel("Number of subjects", fontsize=10)
+    ax.set_title("Disease Stage Distribution by Subtype", fontsize=11)
+    ax.legend()
+    ax.set_xticks(range(n_biomarkers + 1))
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+    print(f"[plotting] Saved: {output_path}")
 
 
-def mcmc_trace(models: list[SubtypeModel], path: Path) -> None:
-    fig, ax = plt.subplots(figsize=(7, 3))
-    for m in models:
-        ax.plot(m.samples_likelihood, lw=0.6, label=f"{m.n_subtypes} subtype{'s' if m.n_subtypes > 1 else ''}")
-    ax.set_xlabel("MCMC iteration")
-    ax.set_ylabel("log-likelihood")
-    ax.legend(fontsize=8)
-    fig.tight_layout()
-    fig.savefig(path, dpi=150)
-    plt.close(fig)
+def plot_subtype_assignments(
+    subject_subtypes: np.ndarray,
+    output_path: Path,
+) -> None:
+    """
+    Bar chart of how many subjects were assigned to each subtype.
+
+    Parameters
+    ----------
+    subject_subtypes : np.ndarray, shape (N_subjects,)
+        Most-likely subtype for each subject (0-indexed).
+    output_path : Path
+        Where to save the PNG.
+    """
+    n_subtypes = int(subject_subtypes.max()) + 1
+    counts = [(subject_subtypes == s).sum() for s in range(n_subtypes)]
+    labels = [f"Subtype {s + 1}" for s in range(n_subtypes)]
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+    bars = ax.bar(
+        labels,
+        counts,
+        color=SUBTYPE_COLORS[:n_subtypes],
+        edgecolor="white",
+        linewidth=1,
+    )
+    # Add count labels on top of bars
+    for bar, count in zip(bars, counts):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 1,
+            str(count),
+            ha="center",
+            va="bottom",
+            fontsize=11,
+            fontweight="bold",
+        )
+
+    ax.set_ylabel("Number of subjects", fontsize=10)
+    ax.set_title("Subtype Assignment Summary", fontsize=11)
+    ax.set_ylim(0, max(counts) * 1.2)
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+    print(f"[plotting] Saved: {output_path}")
