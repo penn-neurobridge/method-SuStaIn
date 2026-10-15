@@ -161,7 +161,7 @@ method-SuStaIn/
 ├── uv.lock                    ← Exact pinned versions (committed for reproducibility)
 │
 ├── input/
-│   └── synthetic_data.csv     ← Toy dataset (200 subjects, 6 biomarkers, 2 hidden subtypes)
+│   └── synthetic_data.csv      ← Toy dataset (200 subjects, 6 biomarkers, 2 hidden subtypes)
 │
 ├── codes/
 │   ├── run_analysis.py        ← 🚀 ENTRY POINT — start here
