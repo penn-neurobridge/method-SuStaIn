@@ -30,11 +30,11 @@ patient — without needing to follow anyone over time.
 
 Output files
 ------------
-  output/results.csv              — Per-subject subtype and stage assignments
-  output/figures/pvd_subtype_*.png — Positional variance diagram per subtype
+  output/results.csv               – Per-subject subtype and stage assignments
+  output/figures/pvd_subtype_*.png – Positional variance diagram per subtype
   output/figures/staging_histogram.png
   output/figures/subtype_assignments.png
-"""
+""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ import pandas as pd
 # Add the codes/ directory to the Python path so we can import our own modules
 sys.path.insert(0, str(Path(__file__).parent))
 
-from preprocessing import load_and_preprocess
+from preprocessing import load_and_preprocess, generate_synthetic_data
 from plotting import (
     plot_positional_variance_diagram,
     plot_staging_histogram,
@@ -99,6 +99,21 @@ def main(
         "--seed",
         help="Random seed so results are reproducible.",
     ),
+    noise: float = typer.Option(
+        0.5,
+        "--noise",
+        help=(
+            "Gaussian noise added to z-scores when generating synthetic data. "
+            "Try 0.1 for clean subtypes, 1.5 for very noisy data. "
+            "Use with --generate-data to re-create input/synthetic_data.csv."
+        ),
+    ),
+    generate_data: bool = typer.Option(
+        False,
+        "--generate-data",
+        help="Re-generate synthetic_data.csv before running (uses --noise and --seed). "
+             "Useful for exploring: change --noise, run again, compare the plots!",
+    ),
 ) -> None:
     """
     Run the full SuStaIn analysis: load data → fit model → save results → make plots.
@@ -113,6 +128,20 @@ def main(
     figures_dir.mkdir(parents=True, exist_ok=True)
 
     np.random.seed(seed)
+
+    # ── 0b. Optionally (re)generate synthetic data ────────────────────────────
+    if generate_data or not input.exists():
+        if not input.exists():
+            typer.echo(f"\n  Input file not found at {input}. Generating synthetic data...")
+        else:
+            typer.echo(f"\n  --generate-data flag set. Creating fresh data with noise_std={noise}...")
+        generate_synthetic_data(
+            n_subjects=300,
+            n_subtypes=n_subtypes,
+            noise_std=noise,
+            seed=seed,
+            output_path=input,
+        )
 
     # ── 1. Load & preprocess ──────────────────────────────────────────────────
     typer.echo("\n[Step 1/4] Loading and preprocessing data...")
