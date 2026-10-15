@@ -17,9 +17,9 @@ dependencies = [
     # CLI framework (makes the --help flags and --input arguments work)
     "typer>=0.12",
 
-    # NOTE: pySuStaIn is not on PyPI — install it separately from GitHub:
-    #   pip install "git+https://github.com/ucl-pond/pySuStaIn.git"
-    # The pipeline runs in demo mode if pySuStaIn is not installed.
+    # pySuStaIn is not on PyPI, so we install directly from GitHub.
+    # uv handles this automatically when you run `uv sync`.
+    "pySuStaIn @ git+https://github.com/ucl-pond/pySuStaIn.git",
 ]
 
 [project.scripts]
